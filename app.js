@@ -102,15 +102,27 @@ app.get('/auth/twitter/callback',
 //     callbackURL: config.domain + '/auth/github/callback'
 //   },
 //   function(accessToken, refreshToken, profile, done) {
-//     console.log( accessToken );
-//     console.log( profile );
-//     done( JSON.stringify(profile) ); 
+//     done( null, profile ); 
 //   }
 // ));
-// app.get('/auth/github', passport.authenticate('github'));
+// app.get('/auth/github', 
+//   function(req, res, next){
+//     if( req.query.clientRedirectUrl ){
+//       req.session.clientRedirectUrl = req.query.clientRedirectUrl;  
+//     }
+//     next();
+//   },
+//   passport.authenticate('github'));
 // app.get('/auth/github/callback',
-//   passport.authenticate('github',  { successRedirect: '/',
-//                                       failureRedirect: '/' }));
+//   function(req, res, next){
+//     if( req.query.clientRedirectUrl ){
+//       req.session.clientRedirectUrl = req.query.clientRedirectUrl;  
+//     }
+//     next();
+//   },
+//   passport.authenticate('github',  
+//     { successRedirect: '/',
+//       failureRedirect: '/' }));
 
 
 
