@@ -2,7 +2,7 @@
 
 
 ## Overview
-An expressJS + passport oath proxy to quickly get setup with various OAuth providers. As of now, 
+An expressJS + passport oauth proxy to quickly get setup with various OAuth providers. As of now, 
 this node application simply guides a person through a provider's oauth flow and then redirects
 the user back to a client url with the users basic information as url query params.
 
@@ -33,6 +33,21 @@ module.exports = credentials;
 
 You will also need to update ```config.js``` with the applications domain. This is used
 in constructing the callback urls for the oauth providers.
+
+## Flow
+From your client, direct user to 
+
+```http://<domain>.<tld>/auth/<provider>?clientRedirectUrl=<your redirect url>```
+
+This will step the user through the steps and return to `clientRedirectUrl` the following structure:
+
+```
+<clientRedirectUrl>?provider=<provider>&id=<id>&firstName=<firstName>&lastName=<lastName>&email=<email>
+```
+
+In the case one of these fields is not found, it will return ```None```
+
+You can now parse the query params and do with them as you wish.
 
 ## Implemented Providers
 1. facebook: Works
