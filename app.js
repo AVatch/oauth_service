@@ -42,14 +42,7 @@ passport.use(new FacebookStrategy({
     profileFields: ['id', 'displayName', 'name', 'emails']
   },
   function(accessToken, refreshToken, profile, done) {
-
-    // console.log(accessToken)
-
-    // console.log(refreshToken)
-
-    // console.log(profile);
-
-    done( null, JSON.stringify(profile) );
+    done( null, profile );
   }
 ));
 
@@ -72,22 +65,34 @@ app.get('/auth/facebook/callback',
 
 
 
-// var TwitterStrategy = require('passport-twitter').Strategy;
-// passport.use(new TwitterStrategy({
-//     consumerKey: credentials.CONSUMER_KEY.twitter,
-//     consumerSecret: credentials.CONSUMER_SECRET.twitter,
-//     callbackURL: config.domain + '/auth/twitter/callback'
-//   },
-//   function(accessToken, refreshToken, profile, done) {
-//     console.log( accessToken );
-//     console.log( profile );
-//     done( JSON.stringify(profile) );
-//   }
-// ));
-// app.get('/auth/twitter', passport.authenticate('twitter'));
-// app.get('/auth/twitter/callback',
-//   passport.authenticate('twitter',  { successRedirect: '/',
-//                                       failureRedirect: '/' }));
+var TwitterStrategy = require('passport-twitter').Strategy;
+passport.use(new TwitterStrategy({
+    consumerKey: credentials.CONSUMER_KEY.twitter,
+    consumerSecret: credentials.CONSUMER_SECRET.twitter,
+    callbackURL: config.domain + '/auth/twitter/callback'
+  },
+  function(accessToken, refreshToken, profile, done) {
+    console.log( profile );
+    done( null, profile );
+  }
+));
+
+app.get('/auth/twitter',
+  function(req, res, next){
+    if( req.query.clientRedirectUrl ){
+      req.session.clientRedirectUrl = req.query.clientRedirectUrl;  
+    }
+    next();
+  },
+  passport.authenticate('twitter'));
+
+app.get('/auth/twitter/callback',
+  function(req, res, next){
+    next();
+  },
+  passport.authenticate('twitter',  
+    { successRedirect: '/',
+      failureRedirect: '/' }));
 
 
 // var GitHubStrategy = require('passport-github2').Strategy;
@@ -112,16 +117,35 @@ app.get('/auth/facebook/callback',
 
 app.get('/', function (req, res) {
 
-  var user = JSON.parse(req.user);
-
   if (req.session.clientRedirectUrl) {
     redirectURL = req.session.clientRedirectUrl;
     delete req.session.clientRedirectUrl;  
-    res.redirect(redirectURL + 
-      '?provider=' + user.provider + 
-      '&firstName=' + user.name.givenName + 
-      '&lastName=' + user.name.familyName + 
-      '&email=' + user.emails[0].value);
+
+    var user = {}
+    if( req.user.provider == 'facebook' ){
+      user.provider = 'facebook';
+      user.id = req.user.id || 'None';
+      user.firstName = req.user.name.givenName || 'None';
+      user.lastName = req.user.name.familyName || 'None';
+      user.email = req.user.emails[0].value || 'None';
+    }else if( req.user.provider == 'twitter' ){
+      user.provider = 'twitter';
+      user.id = req.user.id || 'None';
+      user.firstName = req.user.displayName.split(' ')[0] || 'None';
+      user.lastName = req.user.displayName.split(' ')[1] || 'None';
+      user.email = 'None';
+    }
+
+    if( user ){
+      res.redirect( redirectURL + 
+        '?provider=' + user.provider + 
+        '&id=' + user.id + 
+        '&firstName=' + user.firstName + 
+        '&lastName=' + user.lastName + 
+        '&email=' + user.email );  
+    }else{
+      res.send('Hello World!');  
+    }
   }else{
     res.send('Hello World!');
   } 
