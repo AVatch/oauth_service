@@ -53,3 +53,6 @@ You can now parse the query params and do with them as you wish.
 1. facebook: Works
 2. twitter: Works
 3. github: Pending
+
+## Deployment
+Follow along the helpful steps in this Digital Ocean Walkthrough [link](https://www.digitalocean.com/community/tutorials/how-to-set-up-a-node-js-application-for-production-on-ubuntu-14-04)
