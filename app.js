@@ -155,8 +155,8 @@ app.get('/', function (req, res) {
       user.id = req.user.id || 'None';
       user.firstName = req.user.name.givenName;
       user.lastName = req.user.name.familyName;
-      user.email = 'None';
-      user.link = req.user._json.publicProfileUrl;
+      user.email = req.user._json.emailAddress || 'None';
+      user.link = req.user._json.publicProfileUrl || 'None';
     }
 
     if( user ){
@@ -165,8 +165,8 @@ app.get('/', function (req, res) {
         '&id=' + user.id + 
         '&firstName=' + user.firstName + 
         '&lastName=' + user.lastName + 
-        '&email=' + user.email ) + 
-        '&link=' + user.link;
+        '&email=' + user.email + 
+        '&link=' + user.link );
     }else{
       res.send('Hello World!');  
     }
