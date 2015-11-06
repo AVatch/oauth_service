@@ -72,7 +72,6 @@ passport.use(new TwitterStrategy({
     callbackURL: config.domain + '/auth/twitter/callback'
   },
   function(accessToken, refreshToken, profile, done) {
-    console.log( profile );
     done( null, profile );
   }
 ));
@@ -95,35 +94,35 @@ app.get('/auth/twitter/callback',
       failureRedirect: '/' }));
 
 
-// var GitHubStrategy = require('passport-github2').Strategy;
-// passport.use(new GitHubStrategy({
-//     clientID: credentials.CONSUMER_KEY.github,
-//     clientSecret: credentials.CONSUMER_SECRET.github,
-//     callbackURL: config.domain + '/auth/github/callback'
-//   },
-//   function(accessToken, refreshToken, profile, done) {
-//     done( null, profile ); 
-//   }
-// ));
-// app.get('/auth/github', 
-//   function(req, res, next){
-//     if( req.query.clientRedirectUrl ){
-//       req.session.clientRedirectUrl = req.query.clientRedirectUrl;  
-//     }
-//     next();
-//   },
-//   passport.authenticate('github'));
-// app.get('/auth/github/callback',
-//   function(req, res, next){
-//     if( req.query.clientRedirectUrl ){
-//       req.session.clientRedirectUrl = req.query.clientRedirectUrl;  
-//     }
-//     next();
-//   },
-//   passport.authenticate('github',  
-//     { successRedirect: '/',
-//       failureRedirect: '/' }));
+var LinkedinStrategy = require('passport-linkedin-oauth2').Strategy;
+passport.use(new LinkedinStrategy({
+    clientID: credentials.CONSUMER_KEY.linkedin,
+    clientSecret: credentials.CONSUMER_SECRET.linkedin,
+    callbackURL: config.domain + '/auth/linkedin/callback',
+    profileFields: ['id', 'first-name', 'last-name', 'email-address', 'public-profile-url']
+  },
+  function(accessToken, refreshToken, profile, done) {
+    done( null, profile );
+  }
+));
 
+app.get('/auth/linkedin',
+  function(req, res, next){
+    if( req.query.clientRedirectUrl ){
+      req.session.clientRedirectUrl = req.query.clientRedirectUrl;  
+    }
+    next();
+  },
+  passport.authenticate('linkedin', { scope: ['r_basicprofile', 'r_emailaddress'],
+    state: 'DCEeFWf4waaew5A53sdfKefwe424' }));
+
+app.get('/auth/linkedin/callback',
+  function(req, res, next){
+    next();
+  },
+  passport.authenticate('linkedin',  
+    { successRedirect: '/',
+      failureRedirect: '/' }));
 
 
 
@@ -133,6 +132,9 @@ app.get('/', function (req, res) {
     redirectURL = req.session.clientRedirectUrl;
     delete req.session.clientRedirectUrl;  
 
+    console.log('logged in');
+    console.log(req.user);
+
     var user = {}
     if( req.user.provider == 'facebook' ){
       user.provider = 'facebook';
@@ -140,12 +142,21 @@ app.get('/', function (req, res) {
       user.firstName = req.user.name.givenName || 'None';
       user.lastName = req.user.name.familyName || 'None';
       user.email = req.user.emails[0].value || 'None';
+      user.link = 'None';
     }else if( req.user.provider == 'twitter' ){
       user.provider = 'twitter';
       user.id = req.user.id || 'None';
       user.firstName = req.user.displayName.split(' ')[0] || 'None';
       user.lastName = req.user.displayName.split(' ')[1] || 'None';
       user.email = 'None';
+      user.link = 'None';
+    }else if( req.user.provider == 'linkedin'){
+      user.provider = 'linkedin';
+      user.id = req.user.id || 'None';
+      user.firstName = req.user.name.givenName;
+      user.lastName = req.user.name.familyName;
+      user.email = 'None';
+      user.link = req.user._json.publicProfileUrl;
     }
 
     if( user ){
@@ -154,7 +165,8 @@ app.get('/', function (req, res) {
         '&id=' + user.id + 
         '&firstName=' + user.firstName + 
         '&lastName=' + user.lastName + 
-        '&email=' + user.email );  
+        '&email=' + user.email ) + 
+        '&link=' + user.link;
     }else{
       res.send('Hello World!');  
     }

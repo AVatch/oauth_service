@@ -1,5 +1,5 @@
 var config = {
-  'domain': 'http://f83a887c.ngrok.io'
+  'domain': 'http://c2db430e.ngrok.io'
 };
 
 module.exports = config;
